@@ -45,6 +45,12 @@ A clean, lightweight, and secure **password generator** built with Python and tt
 
 ---
 
+## 📦 Download
+
+👉 [Download the latest version](https://github.com/yourusername/PassForge/releases/latest)
+
+---
+
 ## 🚀 How to Run
 
 1. Clone this repository:
