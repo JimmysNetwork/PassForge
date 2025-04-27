@@ -7,7 +7,19 @@ import ttkbootstrap as ttk
 import tkinter.messagebox as messagebox
 import tkinter.filedialog as filedialog
 import base64
-from ttkbootstrap.constants import BOTH, W, X, Y, LEFT, RIGHT, VERTICAL, PRIMARY, SUCCESS, INFO
+from ttkbootstrap.constants import (
+    BOTH,
+    W,
+    X,
+    Y,
+    LEFT,
+    RIGHT,
+    VERTICAL,
+    PRIMARY,
+    SUCCESS,
+    INFO,
+)
+
 
 class PasswordGeneratorApp:
     def __init__(self, root):
@@ -24,7 +36,9 @@ class PasswordGeneratorApp:
         frame.pack(expand=True, fill=BOTH)
 
         # About Button
-        self.about_button = ttk.Button(root, text="About", bootstyle=INFO, width=6, command=self.show_about)
+        self.about_button = ttk.Button(
+            root, text="About", bootstyle=INFO, width=6, command=self.show_about
+        )
         self.about_button.place(x=630, y=6)
 
         # Password Length
@@ -43,44 +57,77 @@ class PasswordGeneratorApp:
         self.include_numbers = ttk.BooleanVar(value=True)
         self.include_symbols = ttk.BooleanVar(value=True)
 
-        ttk.Checkbutton(frame, text="Include Uppercase Letters", variable=self.include_uppercase).pack(anchor=W)
-        ttk.Checkbutton(frame, text="Include Numbers", variable=self.include_numbers).pack(anchor=W)
-        ttk.Checkbutton(frame, text="Include Symbols", variable=self.include_symbols).pack(anchor=W)
+        ttk.Checkbutton(
+            frame, text="Include Uppercase Letters", variable=self.include_uppercase
+        ).pack(anchor=W)
+        ttk.Checkbutton(
+            frame, text="Include Numbers", variable=self.include_numbers
+        ).pack(anchor=W)
+        ttk.Checkbutton(
+            frame, text="Include Symbols", variable=self.include_symbols
+        ).pack(anchor=W)
 
         # Generate Button
-        self.generate_button = ttk.Button(frame, text="Generate Password(s)", bootstyle=SUCCESS, command=self.generate_password)
+        self.generate_button = ttk.Button(
+            frame,
+            text="Generate Password(s)",
+            bootstyle=SUCCESS,
+            command=self.generate_password,
+        )
         self.generate_button.pack(pady=15, fill=X)
 
         # Output Password
-        self.password_output = ttk.Entry(frame, font=('Helvetica', 14), justify='center')
+        self.password_output = ttk.Entry(
+            frame, font=("Helvetica", 14), justify="center"
+        )
         self.password_output.pack(fill=X, pady=(0, 10))
 
         # Password Strength Label
-        self.strength_label = ttk.Label(frame, text="", font=('Helvetica', 12, 'bold'))
+        self.strength_label = ttk.Label(frame, text="", font=("Helvetica", 12, "bold"))
         self.strength_label.pack(pady=(0, 10))
 
-        self.passwords_created_label = ttk.Label(frame, text="", font=('Helvetica', 10))
+        self.passwords_created_label = ttk.Label(frame, text="", font=("Helvetica", 10))
         self.passwords_created_label.pack(pady=(0, 10))
 
         # Copy Button
-        self.copy_button = ttk.Button(frame, text="Copy to Clipboard", bootstyle=INFO, command=self.copy_to_clipboard)
+        self.copy_button = ttk.Button(
+            frame,
+            text="Copy to Clipboard",
+            bootstyle=INFO,
+            command=self.copy_to_clipboard,
+        )
         self.copy_button.pack(fill=X, pady=(0, 10))
 
         # Export Button
-        self.export_button = ttk.Button(frame, text="Export Passwords", bootstyle=PRIMARY, command=self.export_passwords)
+        self.export_button = ttk.Button(
+            frame,
+            text="Export Passwords",
+            bootstyle=PRIMARY,
+            command=self.export_passwords,
+        )
         self.export_button.pack(fill=X, pady=(0, 20))
 
         # Load Button (NEW)
-        self.load_button = ttk.Button(frame, text="Load Passwords", bootstyle=PRIMARY, command=self.load_passwords)
+        self.load_button = ttk.Button(
+            frame, text="Load Passwords", bootstyle=PRIMARY, command=self.load_passwords
+        )
         self.load_button.pack(fill=X, pady=(0, 20))
 
         # Password History Header
         history_header = ttk.Frame(frame)
         history_header.pack(fill=X, pady=(10, 0))
 
-        ttk.Label(history_header, text="Password History:", font=('Helvetica', 12, 'bold')).pack(side=LEFT)
+        ttk.Label(
+            history_header, text="Password History:", font=("Helvetica", 12, "bold")
+        ).pack(side=LEFT)
 
-        self.clear_history_btn = ttk.Button(history_header, text="Clear", bootstyle="danger-outline", width=6, command=self.clear_history)
+        self.clear_history_btn = ttk.Button(
+            history_header,
+            text="Clear",
+            bootstyle="danger-outline",
+            width=6,
+            command=self.clear_history,
+        )
         self.clear_history_btn.pack(side=RIGHT, padx=(0, 5))
 
         # History Scrollable Area
@@ -90,15 +137,21 @@ class PasswordGeneratorApp:
         self.history_canvas = ttk.Canvas(history_container, background="white")
         self.history_canvas.pack(side=LEFT, fill=BOTH, expand=True)
 
-        scrollbar = ttk.Scrollbar(history_container, orient=VERTICAL, command=self.history_canvas.yview)
+        scrollbar = ttk.Scrollbar(
+            history_container, orient=VERTICAL, command=self.history_canvas.yview
+        )
         scrollbar.pack(side=RIGHT, fill=Y)
 
         self.scrollable_history_frame = ttk.Frame(self.history_canvas)
-        self.history_canvas.create_window((0, 0), window=self.scrollable_history_frame, anchor="nw")
+        self.history_canvas.create_window(
+            (0, 0), window=self.scrollable_history_frame, anchor="nw"
+        )
 
         self.history_canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.scrollable_history_frame.bind("<Configure>", self.on_history_frame_configure)
+        self.scrollable_history_frame.bind(
+            "<Configure>", self.on_history_frame_configure
+        )
         self.history_canvas.bind_all("<MouseWheel>", self.on_mousewheel)
 
     def center_window(self, width, height):
@@ -118,7 +171,7 @@ class PasswordGeneratorApp:
         window.geometry(f"{width}x{height}+{x}+{y}")
 
     def set_window_icon(self):
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             icon_path = os.path.join(sys._MEIPASS, "passforge.ico")
         else:
             icon_path = "passforge.ico"
@@ -131,10 +184,15 @@ class PasswordGeneratorApp:
             if length <= 0 or batch_size <= 0:
                 raise ValueError
             if length > 128:
-                messagebox.showwarning(title="Warning", message="Maximum allowed length is 128 characters. Password(s) will be generated with 128 characters.")
+                messagebox.showwarning(
+                    title="Warning",
+                    message="Maximum allowed length is 128 characters. Password(s) will be generated with 128 characters.",
+                )
                 length = 128
         except ValueError:
-            messagebox.showerror(title="Error", message="Please enter valid positive numbers.")
+            messagebox.showerror(
+                title="Error", message="Please enter valid positive numbers."
+            )
             return
 
         chars = string.ascii_lowercase
@@ -146,10 +204,15 @@ class PasswordGeneratorApp:
             chars += string.punctuation
 
         if not chars:
-            messagebox.showerror(title="Error", message="Please select at least one character type.")
+            messagebox.showerror(
+                title="Error", message="Please select at least one character type."
+            )
             return
 
-        passwords = [''.join(random.choice(chars) for _ in range(length)) for _ in range(batch_size)]
+        passwords = [
+            "".join(random.choice(chars) for _ in range(length))
+            for _ in range(batch_size)
+        ]
 
         self.password_output.delete(0, ttk.END)
         self.password_output.insert(0, passwords[0])
@@ -183,7 +246,9 @@ class PasswordGeneratorApp:
         password = self.password_output.get()
         if password:
             pyperclip.copy(password)
-            messagebox.showinfo(title="Copied!", message="Password copied to clipboard!")
+            messagebox.showinfo(
+                title="Copied!", message="Password copied to clipboard!"
+            )
 
     def update_history_display(self):
         for widget in self.scrollable_history_frame.winfo_children():
@@ -196,7 +261,12 @@ class PasswordGeneratorApp:
             pw_label = ttk.Label(pw_frame, text=pw, font=("Courier", 10), anchor="w")
             pw_label.pack(side=LEFT, expand=True)
 
-            copy_btn = ttk.Button(pw_frame, text="Copy", width=6, command=lambda p=pw: self.copy_specific_password(p))
+            copy_btn = ttk.Button(
+                pw_frame,
+                text="Copy",
+                width=6,
+                command=lambda p=pw: self.copy_specific_password(p),
+            )
             copy_btn.pack(side=RIGHT)
 
         self.history_canvas.update_idletasks()
@@ -222,31 +292,36 @@ class PasswordGeneratorApp:
             messagebox.showerror(title="Error", message="No passwords to export.")
             return
 
-        file_path = filedialog.asksaveasfilename(defaultextension=".passforge", filetypes=[("PassForge Files", "*.passforge")], title="Save Passwords")
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".passforge",
+            filetypes=[("PassForge Files", "*.passforge")],
+            title="Save Passwords",
+        )
 
         if file_path:
-            passwords_joined = '\n'.join(self.password_history)
-            encoded = base64.b64encode(passwords_joined.encode('utf-8'))
-            with open(file_path, 'wb') as f:
+            passwords_joined = "\n".join(self.password_history)
+            encoded = base64.b64encode(passwords_joined.encode("utf-8"))
+            with open(file_path, "wb") as f:
                 f.write(encoded)
-            messagebox.showinfo(title="Exported", message="Passwords exported successfully!")
+            messagebox.showinfo(
+                title="Exported", message="Passwords exported successfully!"
+            )
             self.clear_history()
 
-    
     def load_passwords(self):
         file_path = filedialog.askopenfilename(
             defaultextension=".passforge",
             filetypes=[("PassForge Files", "*.passforge")],
-            title="Load Passwords"
+            title="Load Passwords",
         )
 
         if file_path:
             try:
-                with open(file_path, 'rb') as f:
+                with open(file_path, "rb") as f:
                     encoded = f.read()
 
-                decoded = base64.b64decode(encoded).decode('utf-8')
-                passwords = decoded.split('\n')
+                decoded = base64.b64decode(encoded).decode("utf-8")
+                passwords = decoded.split("\n")
 
                 # Extend the history
                 self.password_history.extend(passwords)
@@ -265,10 +340,18 @@ class PasswordGeneratorApp:
         frame = ttk.Frame(about_window, padding=20)
         frame.pack(expand=True, fill=BOTH)
 
-        ttk.Label(frame, text="PassForge", font=("Helvetica", 16, "bold")).pack(pady=(0, 10))
-        ttk.Label(frame, text="A simple, secure password generator.\nBuilt with Python and ttkbootstrap.", justify="center").pack(pady=(0, 10))
+        ttk.Label(frame, text="PassForge", font=("Helvetica", 16, "bold")).pack(
+            pady=(0, 10)
+        )
+        ttk.Label(
+            frame,
+            text="A simple, secure password generator.\nBuilt with Python and ttkbootstrap.",
+            justify="center",
+        ).pack(pady=(0, 10))
         ttk.Label(frame, text="Version: 1.5.0", justify="center").pack(pady=(0, 10))
-        github_link = ttk.Label(frame, text="View on GitHub", foreground="blue", cursor="hand2")
+        github_link = ttk.Label(
+            frame, text="View on GitHub", foreground="blue", cursor="hand2"
+        )
         github_link.pack()
         github_link.bind("<Button-1>", lambda e: self.open_github())
 
@@ -276,7 +359,9 @@ class PasswordGeneratorApp:
 
     def open_github(self):
         import webbrowser
+
         webbrowser.open_new("https://github.com/jimmysnetwork/passforge")
+
 
 if __name__ == "__main__":
     app = ttk.Window(themename="flatly")
