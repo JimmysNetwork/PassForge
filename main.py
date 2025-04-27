@@ -18,10 +18,8 @@ class PasswordGeneratorApp:
         self.set_window_icon()
         self.center_window(500, 600)
 
-        # Password History
         self.password_history = []
 
-        # Frame
         frame = ttk.Frame(root, padding=(20, 60, 20, 20))
         frame.pack(expand=True, fill=BOTH)
 
@@ -65,14 +63,20 @@ class PasswordGeneratorApp:
         self.copy_button = ttk.Button(frame, text="Copy to Clipboard", bootstyle=INFO, command=self.copy_to_clipboard)
         self.copy_button.pack(fill=X, pady=(0, 10))
 
-        # Export Passwords
+        # Export Button
         self.export_button = ttk.Button(frame, text="Export Passwords", bootstyle=PRIMARY, command=self.export_passwords)
         self.export_button.pack(fill=X, pady=(0, 20))
 
-        # Password History Label
-        ttk.Label(frame, text="Password History (Scrollable):", font=('Helvetica', 12, 'bold')).pack(anchor=W)
+        # Password History Header
+        history_header = ttk.Frame(frame)
+        history_header.pack(fill=X, pady=(10, 0))
 
-        # Password History Frame (Scrollable)
+        ttk.Label(history_header, text="Password History:", font=('Helvetica', 12, 'bold')).pack(side=LEFT)
+
+        self.clear_history_btn = ttk.Button(history_header, text="Clear", bootstyle="danger-outline", width=6, command=self.clear_history)
+        self.clear_history_btn.pack(side=RIGHT, padx=(0, 5))
+
+        # History Scrollable Area
         history_container = ttk.Frame(frame)
         history_container.pack(fill=BOTH, expand=True, pady=(0, 10))
 
@@ -87,10 +91,7 @@ class PasswordGeneratorApp:
 
         self.history_canvas.configure(yscrollcommand=scrollbar.set)
 
-        # Correct binding AFTER frame created
         self.scrollable_history_frame.bind("<Configure>", self.on_history_frame_configure)
-
-        # Mouse scroll
         self.history_canvas.bind_all("<MouseWheel>", self.on_mousewheel)
 
     def center_window(self, width, height):
@@ -187,6 +188,11 @@ class PasswordGeneratorApp:
     def on_mousewheel(self, event):
         self.history_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
+    def clear_history(self):
+        self.password_history.clear()
+        self.update_history_display()
+        messagebox.showinfo("Cleared", "Password history cleared!")
+
     def copy_specific_password(self, password):
         pyperclip.copy(password)
         messagebox.showinfo(title="Copied!", message="Password copied to clipboard!")
@@ -204,6 +210,7 @@ class PasswordGeneratorApp:
             with open(file_path, 'wb') as f:
                 f.write(encoded)
             messagebox.showinfo(title="Exported", message="Passwords exported successfully!")
+            self.clear_history()
 
     def show_about(self):
         about_window = ttk.Toplevel(self.root)
@@ -216,7 +223,7 @@ class PasswordGeneratorApp:
 
         ttk.Label(frame, text="PassForge", font=("Helvetica", 16, "bold")).pack(pady=(0, 10))
         ttk.Label(frame, text="A simple, secure password generator.\nBuilt with Python and ttkbootstrap.", justify="center").pack(pady=(0, 10))
-        ttk.Label(frame, text="Version: 1.1.0", justify="center").pack(pady=(0, 10))
+        ttk.Label(frame, text="Version: 1.2.0", justify="center").pack(pady=(0, 10))
         github_link = ttk.Label(frame, text="View on GitHub", foreground="blue", cursor="hand2")
         github_link.pack()
         github_link.bind("<Button-1>", lambda e: self.open_github())
