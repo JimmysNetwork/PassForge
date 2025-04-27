@@ -59,6 +59,9 @@ class PasswordGeneratorApp:
         self.strength_label = ttk.Label(frame, text="", font=('Helvetica', 12, 'bold'))
         self.strength_label.pack(pady=(0, 10))
 
+        self.passwords_created_label = ttk.Label(frame, text="", font=('Helvetica', 10))
+        self.passwords_created_label.pack(pady=(0, 10))
+
         # Copy Button
         self.copy_button = ttk.Button(frame, text="Copy to Clipboard", bootstyle=INFO, command=self.copy_to_clipboard)
         self.copy_button.pack(fill=X, pady=(0, 10))
@@ -105,6 +108,15 @@ class PasswordGeneratorApp:
         y = (screen_height // 2) - (height // 2)
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
+    def center_child_window(self, window, width, height):
+        parent_x = self.root.winfo_rootx()
+        parent_y = self.root.winfo_rooty()
+        parent_width = self.root.winfo_width()
+        parent_height = self.root.winfo_height()
+        x = parent_x + (parent_width // 2) - (width // 2)
+        y = parent_y + (parent_height // 2) - (height // 2)
+        window.geometry(f"{width}x{height}+{x}+{y}")
+
     def set_window_icon(self):
         if getattr(sys, 'frozen', False):
             icon_path = os.path.join(sys._MEIPASS, "passforge.ico")
@@ -146,6 +158,10 @@ class PasswordGeneratorApp:
 
         self.password_history.extend(passwords)
         self.update_history_display()
+
+        self.passwords_created_label.config(
+            text=f"✅ {batch_size} Password{'s' if batch_size > 1 else ''} Created!"
+        )
 
     def update_strength_label(self, password):
         length = len(password)
@@ -251,10 +267,12 @@ class PasswordGeneratorApp:
 
         ttk.Label(frame, text="PassForge", font=("Helvetica", 16, "bold")).pack(pady=(0, 10))
         ttk.Label(frame, text="A simple, secure password generator.\nBuilt with Python and ttkbootstrap.", justify="center").pack(pady=(0, 10))
-        ttk.Label(frame, text="Version: 1.2.0", justify="center").pack(pady=(0, 10))
+        ttk.Label(frame, text="Version: 1.5.0", justify="center").pack(pady=(0, 10))
         github_link = ttk.Label(frame, text="View on GitHub", foreground="blue", cursor="hand2")
         github_link.pack()
         github_link.bind("<Button-1>", lambda e: self.open_github())
+
+        self.center_child_window(about_window, 350, 200)
 
     def open_github(self):
         import webbrowser

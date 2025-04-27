@@ -23,6 +23,11 @@ A clean, lightweight, and secure **password generator** built with Python and tt
 - 📈 **Maximum Length Handling**  
   Warnings shown if you try to create passwords longer than 128 characters.
 
+- 💾 **Save & Load Password Lists**
+
+  - Export passwords (Base64-encoded for lightweight encryption)
+  - Load previously saved lists back into the app instantly
+
 - 🖥️ **Polished Modern Interface**  
   Built using [ttkbootstrap](https://ttkbootstrap.readthedocs.io/) for a clean and responsive UI.
 
@@ -57,4 +62,12 @@ A clean, lightweight, and secure **password generator** built with Python and tt
    ```bash
    git clone https://github.com/jimmysnetwork/PassForge.git
    cd PassForge
+   ```
+2. Install the requirements:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Run the app:
+   ```
+   python main.py
    ```
