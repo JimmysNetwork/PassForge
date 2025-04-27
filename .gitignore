@@ -1,0 +1,26 @@
+# Ignore virtual environment
+.venv/
+
+# Ignore PyInstaller build artifacts
+build/
+dist/
+__pycache__/
+*.spec
+
+# Ignore temporary files
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore VSCode settings (optional, but clean)
+.vscode/
+
+# Ignore anything else unnecessary
+*.bak
+*.old
