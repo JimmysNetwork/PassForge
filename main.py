@@ -5,29 +5,40 @@ import string
 import pyperclip
 import ttkbootstrap as ttk
 import tkinter.messagebox as messagebox
-from ttkbootstrap.constants import BOTH, W, X, PRIMARY, SUCCESS, INFO
+import tkinter.filedialog as filedialog
+import base64
+from ttkbootstrap.constants import BOTH, W, X, Y, LEFT, RIGHT, VERTICAL, PRIMARY, SUCCESS, INFO
 
 class PasswordGeneratorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("PassForge")
-        self.root.geometry("400x500")
+        self.root.geometry("500x600")
         self.root.resizable(False, False)
         self.set_window_icon()
-        self.center_window(400,500)
+        self.center_window(500, 600)
+
+        # Password History
+        self.password_history = []
 
         # Frame
-        frame = ttk.Frame(root, padding=(20, 60, 20, 20))  # (left, top, right, bottom)
+        frame = ttk.Frame(root, padding=(20, 60, 20, 20))
         frame.pack(expand=True, fill=BOTH)
 
-        # About Buttonpy 
+        # About Button
         self.about_button = ttk.Button(root, text="About", bootstyle=INFO, width=6, command=self.show_about)
-        self.about_button.place(x=330, y=10)
+        self.about_button.place(x=430, y=10)
 
         # Password Length
         ttk.Label(frame, text="Password Length:").pack(anchor=W)
         self.length_entry = ttk.Entry(frame, bootstyle=PRIMARY)
         self.length_entry.pack(fill=X, pady=(0, 10))
+
+        # Batch Size
+        ttk.Label(frame, text="How Many Passwords:").pack(anchor=W)
+        self.batch_entry = ttk.Entry(frame, bootstyle=PRIMARY)
+        self.batch_entry.insert(0, "1")
+        self.batch_entry.pack(fill=X, pady=(0, 10))
 
         # Options
         self.include_uppercase = ttk.BooleanVar(value=True)
@@ -39,7 +50,7 @@ class PasswordGeneratorApp:
         ttk.Checkbutton(frame, text="Include Symbols", variable=self.include_symbols).pack(anchor=W)
 
         # Generate Button
-        self.generate_button = ttk.Button(frame, text="Generate Password", bootstyle=SUCCESS, command=self.generate_password)
+        self.generate_button = ttk.Button(frame, text="Generate Password(s)", bootstyle=SUCCESS, command=self.generate_password)
         self.generate_button.pack(pady=15, fill=X)
 
         # Output Password
@@ -52,39 +63,61 @@ class PasswordGeneratorApp:
 
         # Copy Button
         self.copy_button = ttk.Button(frame, text="Copy to Clipboard", bootstyle=INFO, command=self.copy_to_clipboard)
-        self.copy_button.pack(fill=X)
+        self.copy_button.pack(fill=X, pady=(0, 10))
+
+        # Export Passwords
+        self.export_button = ttk.Button(frame, text="Export Passwords", bootstyle=PRIMARY, command=self.export_passwords)
+        self.export_button.pack(fill=X, pady=(0, 20))
+
+        # Password History Label
+        ttk.Label(frame, text="Password History (Scrollable):", font=('Helvetica', 12, 'bold')).pack(anchor=W)
+
+        # Password History Frame (Scrollable)
+        history_container = ttk.Frame(frame)
+        history_container.pack(fill=BOTH, expand=True, pady=(0, 10))
+
+        self.history_canvas = ttk.Canvas(history_container, background="white")
+        self.history_canvas.pack(side=LEFT, fill=BOTH, expand=True)
+
+        scrollbar = ttk.Scrollbar(history_container, orient=VERTICAL, command=self.history_canvas.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.scrollable_history_frame = ttk.Frame(self.history_canvas)
+        self.history_canvas.create_window((0, 0), window=self.scrollable_history_frame, anchor="nw")
+
+        self.history_canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Correct binding AFTER frame created
+        self.scrollable_history_frame.bind("<Configure>", self.on_history_frame_configure)
+
+        # Mouse scroll
+        self.history_canvas.bind_all("<MouseWheel>", self.on_mousewheel)
 
     def center_window(self, width, height):
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
-
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
     def set_window_icon(self):
         if getattr(sys, 'frozen', False):
-            # If running as .exe
             icon_path = os.path.join(sys._MEIPASS, "passforge.ico")
         else:
-            # If running from .py file
             icon_path = "passforge.ico"
         self.root.iconbitmap(icon_path)
 
     def generate_password(self):
         try:
             length = int(self.length_entry.get())
-            if length <= 0:
+            batch_size = int(self.batch_entry.get())
+            if length <= 0 or batch_size <= 0:
                 raise ValueError
             if length > 128:
-                messagebox.showwarning(
-                    title="Warning",
-                    message="Maximum allowed length is 128 characters.\nPassword will be generated with 128 characters."
-                )
+                messagebox.showwarning(title="Warning", message="Maximum allowed length is 128 characters. Password(s) will be generated with 128 characters.")
                 length = 128
         except ValueError:
-            messagebox.showerror(title="Error", message="Please enter a valid positive number.")
+            messagebox.showerror(title="Error", message="Please enter valid positive numbers.")
             return
 
         chars = string.ascii_lowercase
@@ -99,12 +132,15 @@ class PasswordGeneratorApp:
             messagebox.showerror(title="Error", message="Please select at least one character type.")
             return
 
-        password = ''.join(random.choice(chars) for _ in range(length))
-        self.password_output.delete(0, ttk.END)
-        self.password_output.insert(0, password)
+        passwords = [''.join(random.choice(chars) for _ in range(length)) for _ in range(batch_size)]
 
-        # Analyze strength
-        self.update_strength_label(password)
+        self.password_output.delete(0, ttk.END)
+        self.password_output.insert(0, passwords[0])
+
+        self.update_strength_label(passwords[0])
+
+        self.password_history.extend(passwords)
+        self.update_history_display()
 
     def update_strength_label(self, password):
         length = len(password)
@@ -115,7 +151,6 @@ class PasswordGeneratorApp:
 
         score = sum([has_upper, has_lower, has_digit, has_symbol])
 
-        # Simple Scoring
         if length < 6 or score <= 2:
             self.strength_label.config(text="Weak", foreground="red")
         elif length >= 6 and score == 3:
@@ -129,6 +164,47 @@ class PasswordGeneratorApp:
             pyperclip.copy(password)
             messagebox.showinfo(title="Copied!", message="Password copied to clipboard!")
 
+    def update_history_display(self):
+        for widget in self.scrollable_history_frame.winfo_children():
+            widget.destroy()
+
+        for pw in reversed(self.password_history):
+            pw_frame = ttk.Frame(self.scrollable_history_frame)
+            pw_frame.pack(fill=X, pady=2)
+
+            pw_label = ttk.Label(pw_frame, text=pw, font=("Courier", 10), anchor="w")
+            pw_label.pack(side=LEFT, expand=True)
+
+            copy_btn = ttk.Button(pw_frame, text="Copy", width=6, command=lambda p=pw: self.copy_specific_password(p))
+            copy_btn.pack(side=RIGHT)
+
+        self.history_canvas.update_idletasks()
+        self.history_canvas.configure(scrollregion=self.history_canvas.bbox("all"))
+
+    def on_history_frame_configure(self, event):
+        self.history_canvas.configure(scrollregion=self.history_canvas.bbox("all"))
+
+    def on_mousewheel(self, event):
+        self.history_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def copy_specific_password(self, password):
+        pyperclip.copy(password)
+        messagebox.showinfo(title="Copied!", message="Password copied to clipboard!")
+
+    def export_passwords(self):
+        if not self.password_history:
+            messagebox.showerror(title="Error", message="No passwords to export.")
+            return
+
+        file_path = filedialog.asksaveasfilename(defaultextension=".passforge", filetypes=[("PassForge Files", "*.passforge")], title="Save Passwords")
+
+        if file_path:
+            passwords_joined = '\n'.join(self.password_history)
+            encoded = base64.b64encode(passwords_joined.encode('utf-8'))
+            with open(file_path, 'wb') as f:
+                f.write(encoded)
+            messagebox.showinfo(title="Exported", message="Passwords exported successfully!")
+
     def show_about(self):
         about_window = ttk.Toplevel(self.root)
         about_window.title("About PassForge")
@@ -140,7 +216,7 @@ class PasswordGeneratorApp:
 
         ttk.Label(frame, text="PassForge", font=("Helvetica", 16, "bold")).pack(pady=(0, 10))
         ttk.Label(frame, text="A simple, secure password generator.\nBuilt with Python and ttkbootstrap.", justify="center").pack(pady=(0, 10))
-        ttk.Label(frame, text="Version: 1.0.0", justify="center").pack(pady=(0, 10))
+        ttk.Label(frame, text="Version: 1.1.0", justify="center").pack(pady=(0, 10))
         github_link = ttk.Label(frame, text="View on GitHub", foreground="blue", cursor="hand2")
         github_link.pack()
         github_link.bind("<Button-1>", lambda e: self.open_github())
