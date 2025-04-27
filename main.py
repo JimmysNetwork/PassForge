@@ -13,10 +13,10 @@ class PasswordGeneratorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("PassForge")
-        self.root.geometry("500x600")
+        self.root.geometry("700x800")
         self.root.resizable(False, False)
         self.set_window_icon()
-        self.center_window(500, 600)
+        self.center_window(700, 800)
 
         self.password_history = []
 
@@ -25,7 +25,7 @@ class PasswordGeneratorApp:
 
         # About Button
         self.about_button = ttk.Button(root, text="About", bootstyle=INFO, width=6, command=self.show_about)
-        self.about_button.place(x=430, y=10)
+        self.about_button.place(x=630, y=6)
 
         # Password Length
         ttk.Label(frame, text="Password Length:").pack(anchor=W)
@@ -66,6 +66,10 @@ class PasswordGeneratorApp:
         # Export Button
         self.export_button = ttk.Button(frame, text="Export Passwords", bootstyle=PRIMARY, command=self.export_passwords)
         self.export_button.pack(fill=X, pady=(0, 20))
+
+        # Load Button (NEW)
+        self.load_button = ttk.Button(frame, text="Load Passwords", bootstyle=PRIMARY, command=self.load_passwords)
+        self.load_button.pack(fill=X, pady=(0, 20))
 
         # Password History Header
         history_header = ttk.Frame(frame)
@@ -211,6 +215,30 @@ class PasswordGeneratorApp:
                 f.write(encoded)
             messagebox.showinfo(title="Exported", message="Passwords exported successfully!")
             self.clear_history()
+
+    
+    def load_passwords(self):
+        file_path = filedialog.askopenfilename(
+            defaultextension=".passforge",
+            filetypes=[("PassForge Files", "*.passforge")],
+            title="Load Passwords"
+        )
+
+        if file_path:
+            try:
+                with open(file_path, 'rb') as f:
+                    encoded = f.read()
+
+                decoded = base64.b64decode(encoded).decode('utf-8')
+                passwords = decoded.split('\n')
+
+                # Extend the history
+                self.password_history.extend(passwords)
+                self.update_history_display()
+
+                messagebox.showinfo("Loaded", "Passwords loaded successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to load passwords.\n\n{str(e)}")
 
     def show_about(self):
         about_window = ttk.Toplevel(self.root)
